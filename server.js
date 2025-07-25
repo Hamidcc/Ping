@@ -4,7 +4,14 @@ import axios from "axios";
 const app = express();
 app.use(express.json());
 
-const WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_HERE";
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1398395578483740792/qEc4Em3E_EhQ9PsWW2m_7ddXFKNZeZ0ioTrFR-IqeQwVZ5OoDXc-M4WYs-75nXP48MRs";
+
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*"); // allow any origin
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
 
 app.post("/player-joined", async (req, res) => {
   const { username, userid, joinTime } = req.body;
