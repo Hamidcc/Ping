@@ -4,7 +4,7 @@ import axios from "axios";
 const app = express();
 app.use(express.json());
 
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1398395578483740792/qEc4Em3E_EhQ9PsWW2m_7ddXFKNZeZ0ioTrFR-IqeQwVZ5OoDXc-M4WYs-75nXP48MRs";
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1398440004140798044/aiEiUZu9CtUX0zPIjBvfwdihTvzK7u-hjJK_MVddaKdzOruD6rpbUTNrV_5uTR-rnMmA";
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*"); // allow any origin
