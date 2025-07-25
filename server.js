@@ -1,9 +1,10 @@
-const express = require("express");
-const axios = require("axios");
+import express from "express";
+import axios from "axios";
+
 const app = express();
 app.use(express.json());
 
-const WEBHOOK_URL = "https://discord.com/api/webhooks/1398395578483740792/qEc4Em3E_EhQ9PsWW2m_7ddXFKNZeZ0ioTrFR-IqeQwVZ5OoDXc-M4WYs-75nXP48MRs";
+const WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_HERE";
 
 app.post("/player-joined", async (req, res) => {
   const { username, userid, joinTime } = req.body;
