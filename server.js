@@ -48,40 +48,26 @@ app.post("/player-joined", async (req, res) => {
   }
 });
 
-// GET /get-gamepass → Gamepasses for all user-owned games
 app.get("/get-gamepass", async (req, res) => {
   const userId = req.query.userId;
-  if (!userId) {
-    return res.status(400).json({ error: "Missing userId" });
-  }
+  if (!userId) return res.status(400).json({ error: "Missing userId" });
 
   try {
-    const gamepasses = [];
-    let cursor = null;
+    const response = await axios.get(`https://games.roblox.com/v1/users/${userId}/games`);
+    const placeId = response.data.data[0]?.rootPlace?.id;
+    if (!placeId) return res.status(404).json({ error: "No games found for user" });
 
-    do {
-      const url = `https://games.roblox.com/v2/users/${userId}/games?accessFilter=2&sortOrder=Asc&limit=50${cursor ? `&cursor=${cursor}` : ''}`;
-      const gameRes = await axios.get(url);
-      const games = gameRes.data.data;
+    const gamepasses = await axios.get(`https://catalog.roblox.com/v1/search/items?category=GamePass&limit=30&creatorTargetId=${userId}`);
+    const simplified = gamepasses.data.data.map(gp => ({
+      id: gp.id,
+      name: gp.name,
+      price: gp.price,
+    }));
 
-      for (const game of games) {
-        const passRes = await axios.get(`https://games.roblox.com/v1/games/${game.id}/game-passes`);
-        for (const gamepass of passRes.data.data) {
-          gamepasses.push({
-            id: gamepass.id,
-            name: gamepass.name,
-            price: gamepass.price ?? 0
-          });
-        }
-      }
-
-      cursor = gameRes.data.nextPageCursor;
-    } while (cursor);
-
-    res.json(gamepasses);
+    res.json({ gamepasses: simplified });
   } catch (err) {
-    console.error("Error fetching gamepasses:", err.message);
-    res.status(500).json({ error: "Failed to fetch gamepasses" });
+    const code = err.response?.status || 500;
+    res.status(code).json({ error: err.message });
   }
 });
 
