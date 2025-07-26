@@ -1,18 +1,24 @@
 import express from "express";
 import axios from "axios";
+import cors from "cors";
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
+app.use(cors());
 
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1398440004140798044/aiEiUZu9CtUX0zPIjBvfwdihTvzK7u-hjJK_MVddaKdzOruD6rpbUTNrV_5uTR-rnMmA";
 
+// CORS headers (optional if using `cors()` middleware)
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // allow any origin
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
 
+// POST /player-joined → Discord embed webhook
 app.post("/player-joined", async (req, res) => {
   const { username, userid, joinTime } = req.body;
 
@@ -42,7 +48,43 @@ app.post("/player-joined", async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3000;
+// GET /get-gamepass → Gamepasses for all user-owned games
+app.get("/get-gamepass", async (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) {
+    return res.status(400).json({ error: "Missing userId" });
+  }
+
+  try {
+    const gamepasses = [];
+    let cursor = null;
+
+    do {
+      const url = `https://games.roblox.com/v2/users/${userId}/games?accessFilter=2&sortOrder=Asc&limit=50${cursor ? `&cursor=${cursor}` : ''}`;
+      const gameRes = await axios.get(url);
+      const games = gameRes.data.data;
+
+      for (const game of games) {
+        const passRes = await axios.get(`https://games.roblox.com/v1/games/${game.id}/game-passes`);
+        for (const gamepass of passRes.data.data) {
+          gamepasses.push({
+            id: gamepass.id,
+            name: gamepass.name,
+            price: gamepass.price ?? 0
+          });
+        }
+      }
+
+      cursor = gameRes.data.nextPageCursor;
+    } while (cursor);
+
+    res.json(gamepasses);
+  } catch (err) {
+    console.error("Error fetching gamepasses:", err.message);
+    res.status(500).json({ error: "Failed to fetch gamepasses" });
+  }
+});
+
 app.listen(PORT, () => {
-  console.log(`Listening on ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
