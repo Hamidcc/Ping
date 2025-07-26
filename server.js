@@ -53,11 +53,8 @@ app.get("/get-gamepass", async (req, res) => {
   if (!userId) return res.status(400).json({ error: "Missing userId" });
 
   try {
-    const response = await axios.get(`https://games.roblox.com/v1/users/${userId}/games`);
-    const placeId = response.data.data[0]?.rootPlace?.id;
-    if (!placeId) return res.status(404).json({ error: "No games found for user" });
-
     const gamepasses = await axios.get(`https://catalog.roblox.com/v1/search/items?category=GamePass&limit=30&creatorType=User&creatorTargetId=${userId}`);
+    
     const simplified = gamepasses.data.data.map(gp => ({
       id: gp.id,
       name: gp.name,
@@ -69,7 +66,6 @@ app.get("/get-gamepass", async (req, res) => {
     const code = err.response?.status || 500;
     res.status(code).json({ error: err.message });
   }
-
 });
 
 app.listen(PORT, () => {
