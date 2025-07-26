@@ -69,7 +69,6 @@ app.get("/get-gamepass", async (req, res) => {
     const code = err.response?.status || 500;
     res.status(code).json({ error: err.message });
   }
-      return res.send("<h1>Yo're not supposed to be here, please kindly close this tab</h1>");
 
 });
 
