@@ -57,7 +57,7 @@ app.get("/get-gamepass", async (req, res) => {
     const placeId = response.data.data[0]?.rootPlace?.id;
     if (!placeId) return res.status(404).json({ error: "No games found for user" });
 
-    const gamepasses = await axios.get(`https://catalog.roblox.com/v1/search/items?category=GamePass&limit=30&creatorTargetId=${userId}`);
+    const gamepasses = await axios.get(`https://catalog.roblox.com/v1/search/items?category=GamePass&limit=30&creatorType=User&creatorTargetId=${userId}`);
     const simplified = gamepasses.data.data.map(gp => ({
       id: gp.id,
       name: gp.name,
