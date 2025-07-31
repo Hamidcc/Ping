@@ -9,6 +9,7 @@ app.use(express.json());
 app.use(cors());
 
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1398440004140798044/aiEiUZu9CtUX0zPIjBvfwdihTvzK7u-hjJK_MVddaKdzOruD6rpbUTNrV_5uTR-rnMmA";
+const WEBHOOK_URL2 = "https://discord.com/api/webhooks/1398440004140798044/aiEiUZu9CtUX0zPIjBvfwdihTvzK7u-hjJK_MVddaKdzOruD6rpbUTNrV_5uTR-rnMmA";
 
 // CORS headers (optional if using `cors()` middleware)
 app.use((req, res, next) => {
@@ -19,6 +20,35 @@ app.use((req, res, next) => {
 });
 
 // POST /player-joined → Discord embed webhook
+app.post("/player-joined1", async (req, res) => {
+  const { username, userid, joinTime } = req.body;
+
+  const avatarURL = `https://www.roblox.com/headshot-thumbnail/image?userId=${userid}&width=150&height=150&format=png`;
+
+  const embed = {
+    embeds: [
+      {
+        title: `🎮 ${username} joined the Hiking Game`,
+        thumbnail: { url: avatarURL },
+        fields: [
+          { name: "Username", value: `[${username}](https://www.roblox.com/users/${userid}/profile)`, inline: true },
+          { name: "User ID", value: userid.toString(), inline: true },
+          { name: "Time", value: joinTime, inline: false }
+        ],
+        color: 0x00ff00,
+        timestamp: new Date().toISOString()
+      }
+    ]
+  };
+
+  try {
+    await axios.post(WEBHOOK_URL, embed);
+    res.status(200).send("Ping sent.");
+  } catch (err) {
+    res.status(500).send("Error sending to Discord.");
+  }
+});
+
 app.post("/player-joined", async (req, res) => {
   const { username, userid, joinTime } = req.body;
 
