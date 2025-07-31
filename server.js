@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(cors());
 
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1398440004140798044/aiEiUZu9CtUX0zPIjBvfwdihTvzK7u-hjJK_MVddaKdzOruD6rpbUTNrV_5uTR-rnMmA";
-const WEBHOOK_URL2 = "https://discord.com/api/webhooks/1398440004140798044/aiEiUZu9CtUX0zPIjBvfwdihTvzK7u-hjJK_MVddaKdzOruD6rpbUTNrV_5uTR-rnMmA";
+const WEBHOOK_URL2 = "https://discord.com/api/webhooks/1400293969711071314/FCE8HJKVWsI3K18vsb1mLmEn0GKkYcDDE9qNt5wUuowE7LUxqAVHIu2pH9midnzKmfKf";
 
 // CORS headers (optional if using `cors()` middleware)
 app.use((req, res, next) => {
@@ -42,7 +42,7 @@ app.post("/player-joined1", async (req, res) => {
   };
 
   try {
-    await axios.post(WEBHOOK_URL, embed);
+    await axios.post(WEBHOOK_URL2, embed);
     res.status(200).send("Ping sent.");
   } catch (err) {
     res.status(500).send("Error sending to Discord.");
