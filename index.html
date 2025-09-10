@@ -1,18 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Proxy Redirect</title>
-  <script>
-    // Redirect users automatically to your proxy with target URL
-    const target = "https://example.com"; // Change this to any HTTPS site
-    window.location.href = "/.netlify/functions/proxy?url=" + encodeURIComponent(target);
-  </script>
+<meta charset="UTF-8">
+<title>Proxy Redirect</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    background: #f0f2f5;
+  }
+  #top-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background: #1e1e2f;
+    color: white;
+    gap: 6px;
+  }
+  #top-bar input {
+    flex: 1;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    outline: none;
+    font-size: 14px;
+  }
+  #top-bar button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    background: #4a4aff;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  #top-bar button:hover {
+    background: #2e2eff;
+  }
+  #proxy-frame {
+    width: 100%;
+    height: calc(100% - 44px);
+    border: none;
+  }
+</style>
 </head>
 <body>
-  <p>If you are not redirected, <a id="link" href="">click here</a>.</p>
-  <script>
-    document.getElementById("link").href = "/.netlify/functions/proxy?url=" + encodeURIComponent("https://example.com");
-  </script>
+  <div id="top-bar">
+    <button id="backBtn">◀ Back</button>
+    <button id="forwardBtn">▶ Forward</button>
+    <button id="refreshBtn">⟳ Refresh</button>
+    <input type="text" id="urlInput" placeholder="Enter URL..." />
+    <button id="goBtn">Go</button>
+  </div>
+  <iframe id="proxy-frame" src=""></iframe>
+
+<script>
+  const iframe = document.getElementById('proxy-frame');
+  const urlInput = document.getElementById('urlInput');
+  const backBtn = document.getElementById('backBtn');
+  const forwardBtn = document.getElementById('forwardBtn');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const goBtn = document.getElementById('goBtn');
+
+  const historyStack = [];
+  let currentIndex = -1;
+
+  function loadURL(url) {
+    const proxyURL = `/.netlify/functions/proxy?url=${encodeURIComponent(url)}`;
+    iframe.src = proxyURL;
+
+    // Manage history
+    if (currentIndex === -1 || historyStack[currentIndex] !== url) {
+      historyStack.splice(currentIndex + 1);
+      historyStack.push(url);
+      currentIndex++;
+    }
+
+    updateButtons();
+    urlInput.value = url;
+  }
+
+  function updateButtons() {
+    backBtn.disabled = currentIndex <= 0;
+    forwardBtn.disabled = currentIndex >= historyStack.length - 1;
+  }
+
+  backBtn.addEventListener('click', () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      loadURL(historyStack[currentIndex]);
+    }
+  });
+
+  forwardBtn.addEventListener('click', () => {
+    if (currentIndex < historyStack.length - 1) {
+      currentIndex++;
+      loadURL(historyStack[currentIndex]);
+    }
+  });
+
+  refreshBtn.addEventListener('click', () => {
+    if (currentIndex >= 0) {
+      loadURL(historyStack[currentIndex]);
+    }
+  });
+
+  goBtn.addEventListener('click', () => {
+    const url = urlInput.value.startsWith('http') ? urlInput.value : 'https://' + urlInput.value;
+    loadURL(url);
+  });
+
+  urlInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') goBtn.click();
+  });
+
+  // Initialize with default target
+  loadURL("https://example.com");
+</script>
 </body>
 </html>
