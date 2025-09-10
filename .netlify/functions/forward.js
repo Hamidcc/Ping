@@ -1,7 +1,7 @@
 export async function handler(event, context) {
   const clientIP = event.headers["x-forwarded-for"] || event.headers["client-ip"];
   
-  const response = await fetch("https://66.23.193.126", {
+  const response = await fetch("https://google.com", {
     method: "GET",
     headers: {
       "X-Forwarded-For": clientIP,
