@@ -1,5 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+  <meta http-equiv="refresh" content="0; url=/.netlify/functions/forward">
   <script>
-      const res = await fetch("/.netlify/functions/forward");
-      const text = await res.text();
-      document.body.innerHTML += "<pre>" + text + "</pre>";
+    window.location.href = "/.netlify/functions/forward";
   </script>
+</head>
+<body>
+  <p>If you are not redirected automatically, <a href="/.netlify/functions/forward">click here</a>.</p>
+</body>
+</html>
