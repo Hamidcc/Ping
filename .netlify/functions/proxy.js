@@ -12,23 +12,18 @@ export async function handler(event, context) {
 
     const contentType = res.headers.get("content-type") || "text/html";
 
-    // If HTML, rewrite relative URLs
     if (contentType.includes("text/html")) {
       let body = await res.text();
       const urlObj = new URL(targetUrl);
       const base = urlObj.origin;
 
-      // Rewrite absolute and relative URLs for src, href, action
+      // Only rewrite URLs that start with "/" (root-relative)
       body = body.replace(
         /(src|href|action)=["'](\/[^"']*)["']/gi,
         (match, attr, path) => `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(base + path)}"`
       );
 
-      body = body.replace(
-        /(src|href|action)=["']([^"':?#][^"']*)["']/gi,
-        (match, attr, path) => `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(base + "/" + path)}"`
-      );
-
+      // Leave absolute URLs untouched
       return {
         statusCode: 200,
         headers: { "Content-Type": contentType },
@@ -36,7 +31,7 @@ export async function handler(event, context) {
       };
     }
 
-    // For binary data (images, JS, CSS), return base64
+    // For binary content (images, CSS, JS)
     const buffer = Buffer.from(await res.arrayBuffer());
     return {
       statusCode: 200,
