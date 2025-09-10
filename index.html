@@ -1,0 +1,5 @@
+  <script>
+      const res = await fetch("/.netlify/functions/forward");
+      const text = await res.text();
+      document.body.innerHTML += "<pre>" + text + "</pre>";
+  </script>
