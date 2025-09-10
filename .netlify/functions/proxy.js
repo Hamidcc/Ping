@@ -12,42 +12,40 @@ export async function handler(event, context) {
 
     const contentType = res.headers.get("content-type") || "text/html";
 
-    // Handle text-based content
-    if (contentType.includes("text/html") || contentType.includes("javascript") || contentType.includes("css")) {
-      let body = await res.text();
-      const urlObj = new URL(targetUrl);
-      const base = urlObj.origin;
-
-      // Rewrite all URLs: root-relative /path, protocol-relative //domain.com, or relative paths
-      body = body.replace(
-        /(src|href|action)=["']([^"']+)["']/gi,
-        (match, attr, path) => {
-          // Absolute URL already, leave as is
-          if (path.startsWith("http://") || path.startsWith("https://")) return `${attr}="${path}"`;
-          // Protocol-relative URL
-          if (path.startsWith("//")) return `${attr}="https:${path}"`;
-          // Root-relative or relative path
-          let newUrl = path.startsWith("/") ? base + path : new URL(path, targetUrl).href;
-          return `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(newUrl)}"`;
-        }
-      );
-
+    // Binary content
+    if (!contentType.includes("text") && !contentType.includes("javascript") && !contentType.includes("css")) {
+      const buffer = Buffer.from(await res.arrayBuffer());
       return {
         statusCode: 200,
-        headers: { "Content-Type": contentType },
-        body
+        headers: {
+          "Content-Type": contentType,
+          "Access-Control-Allow-Origin": "*"
+        },
+        body: buffer.toString("base64"),
+        isBase64Encoded: true
       };
     }
 
-    // Handle binary content
-    const buffer = Buffer.from(await res.arrayBuffer());
+    // Text content (HTML/JS/CSS)
+    let body = await res.text();
+    body = body.replace(
+      /(src|href|action)=["']([^"']+)["']/gi,
+      (match, attr, path) => {
+        if (path.startsWith("http://") || path.startsWith("https://")) return `${attr}="${path}"`;
+        if (path.startsWith("//")) return `${attr}="https:${path}"`;
+        let newUrl = path.startsWith("/") ? new URL(path, targetUrl).href : new URL(path, targetUrl).href;
+        return `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(newUrl)}"`;
+      }
+    );
+
     return {
       statusCode: 200,
-      headers: { "Content-Type": contentType },
-      body: buffer.toString("base64"),
-      isBase64Encoded: true
+      headers: {
+        "Content-Type": contentType,
+        "Access-Control-Allow-Origin": "*"
+      },
+      body
     };
-
   } catch (err) {
     return { statusCode: 500, body: "Proxy fetch failed: " + err.message };
   }
