@@ -3,29 +3,51 @@ export async function handler(event, context) {
   if (!targetUrl) return { statusCode: 400, body: "Missing URL" };
 
   try {
-    const res = await fetch(targetUrl);
-    let contentType = res.headers.get("content-type") || "text/html";
+    // Fetch the target URL
+    const res = await fetch(targetUrl, {
+      headers: {
+        "User-Agent": event.headers["user-agent"] || "Mozilla/5.0",
+        "Accept": "*/*"
+      }
+    });
 
-    // For text-based content (HTML, CSS, JS), rewrite URLs
-    let body = await res.text();
+    const contentType = res.headers.get("content-type") || "text/html";
 
-    // Only rewrite if content-type is HTML
+    // If HTML, rewrite URLs
     if (contentType.includes("text/html")) {
+      let body = await res.text();
       const urlObj = new URL(targetUrl);
       const base = urlObj.origin;
 
-      // Rewrite src, href, action starting with /
+      // Rewrite absolute and relative paths
+      // 1. src, href, action starting with /
       body = body.replace(
         /(src|href|action)=["'](\/[^"']*)["']/gi,
-        `$1="/.netlify/functions/proxy?url=${base}$2"`
+        (match, attr, path) => `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(base + path)}"`
       );
+
+      // 2. src, href without leading /
+      body = body.replace(
+        /(src|href|action)=["']([^"':?#][^"']*)["']/gi,
+        (match, attr, path) => `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(base + "/" + path)}"`
+      );
+
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": contentType },
+        body
+      };
     }
 
+    // If binary (images, CSS, JS), return as buffer
+    const buffer = Buffer.from(await res.arrayBuffer());
     return {
-      statusCode: res.status,
+      statusCode: 200,
       headers: { "Content-Type": contentType },
-      body,
+      body: buffer.toString("base64"),
+      isBase64Encoded: true
     };
+
   } catch (err) {
     return { statusCode: 500, body: "Proxy fetch failed: " + err.message };
   }
