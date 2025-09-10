@@ -2,13 +2,17 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Redirecting...</title>
-  <meta http-equiv="refresh" content="0; url=/.netlify/functions/forward">
+  <title>Proxy Redirect</title>
   <script>
-    window.location.href = "/.netlify/functions/forward";
+    // Redirect users automatically to your proxy with target URL
+    const target = "https://example.com"; // Change this to any HTTPS site
+    window.location.href = "/.netlify/functions/proxy?url=" + encodeURIComponent(target);
   </script>
 </head>
 <body>
-  <p>If you are not redirected automatically, <a href="/.netlify/functions/forward">click here</a>.</p>
+  <p>If you are not redirected, <a id="link" href="">click here</a>.</p>
+  <script>
+    document.getElementById("link").href = "/.netlify/functions/proxy?url=" + encodeURIComponent("https://example.com");
+  </script>
 </body>
 </html>
