@@ -3,7 +3,6 @@ export async function handler(event, context) {
   if (!targetUrl) return { statusCode: 400, body: "Missing URL" };
 
   try {
-    // Fetch the target URL
     const res = await fetch(targetUrl, {
       headers: {
         "User-Agent": event.headers["user-agent"] || "Mozilla/5.0",
@@ -13,20 +12,18 @@ export async function handler(event, context) {
 
     const contentType = res.headers.get("content-type") || "text/html";
 
-    // If HTML, rewrite URLs
+    // If HTML, rewrite relative URLs
     if (contentType.includes("text/html")) {
       let body = await res.text();
       const urlObj = new URL(targetUrl);
       const base = urlObj.origin;
 
-      // Rewrite absolute and relative paths
-      // 1. src, href, action starting with /
+      // Rewrite absolute and relative URLs for src, href, action
       body = body.replace(
         /(src|href|action)=["'](\/[^"']*)["']/gi,
         (match, attr, path) => `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(base + path)}"`
       );
 
-      // 2. src, href without leading /
       body = body.replace(
         /(src|href|action)=["']([^"':?#][^"']*)["']/gi,
         (match, attr, path) => `${attr}="/.netlify/functions/proxy?url=${encodeURIComponent(base + "/" + path)}"`
@@ -39,7 +36,7 @@ export async function handler(event, context) {
       };
     }
 
-    // If binary (images, CSS, JS), return as buffer
+    // For binary data (images, JS, CSS), return base64
     const buffer = Buffer.from(await res.arrayBuffer());
     return {
       statusCode: 200,
